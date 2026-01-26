@@ -2,6 +2,9 @@ package Reto2;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 
 public class Bienvenida {
 
@@ -19,11 +22,7 @@ public class Bienvenida {
 		try {
 			ResultSet rs = db.getResultSet("select * from pelicula");
 			while (rs.next()) {
-				System.out.println("ID: " + rs.getObject("numpelicula") + " Nombre: " + rs.getObject("titulo")
-						+ " Duracion: " + rs.getObject("duracion") + " Genero: " + rs.getObject("genero") + " Precio: "
-						+ rs.getObject("precio") + "€"
-
-				);
+				System.out.println(rs.getObject("numpelicula") + "-" + rs.getObject("titulo"));
 			}
 			elegirPelicula();
 		} catch (SQLException e) {
@@ -35,29 +34,94 @@ public class Bienvenida {
 		ConnexionBDD db = new ConnexionBDD();
 		try {
 			System.out.println("Qué pelicula desea ver? ");
-			String peliculaSeleccionada = Inicio.teclado.next();
+			String peliculaSeleccionada = Inicio.teclado.nextLine();
 
 			ResultSet existe = db.getResultSet("select * from pelicula where titulo = '" + peliculaSeleccionada + "'");
 
 			if (existe.next()) {
-				System.out.println("Has seleccionado la película: " + existe.getObject("titulo"));
+				System.out.println("Seleccionada: " + existe.getObject("titulo"));
+				mostrarFechas(peliculaSeleccionada);
 			} else {
 				System.out.println("No existe ninguna pelicula con ese titulo");
 				elegirPelicula();
 			}
-		
+
 			existe.close();
-		
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void sesionesPelicula() {
+
+	public static void mostrarFechas(String peliculaSeleccionada) {
 		ConnexionBDD db = new ConnexionBDD();
 
-		
-		
-	}
-}
+		try {
+			ResultSet rsFechas = db.getResultSet("select distinct date(s.fecha) as fecha " + "from sesion s "
+					+ "join pelicula p on s.numpelicula = p.numpelicula " + "where p.titulo = '" + peliculaSeleccionada
+					+ "'");
 
+			ArrayList<LocalDate> fechas = new ArrayList<>();
+			int i = 1;
+
+			System.out.println("Fechas disponibles para " + peliculaSeleccionada + ":");
+
+			while (rsFechas.next()) {
+				LocalDate fecha = rsFechas.getDate("fecha").toLocalDate();
+				fechas.add(fecha);
+				System.out.println(i + ". " + fecha);
+				i++;
+			}
+
+			rsFechas.close();
+
+			System.out.println("Seleccione una fecha (0 para volver atras): ");
+			int opcion = Inicio.teclado.nextInt();
+			Inicio.teclado.nextLine();
+
+			if (opcion == 0) {
+				elegirPelicula();
+			} else {
+				mostrarHorarios(peliculaSeleccionada, fechas.get(opcion - 1));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void mostrarHorarios(String peliculaSeleccionada, LocalDate fecha) {
+		ConnexionBDD db = new ConnexionBDD();
+
+		try {
+			ResultSet rs = db.getResultSet(
+
+					"select s.horainicio, sa.nomsala, s.precio " + "from sesion s "
+							+ "join pelicula p on s.numpelicula = p.numpelicula "
+							+ "join sala sa on s.numsala = sa.numsala " + "where p.titulo = '" + peliculaSeleccionada
+							+ "' " + "and date(s.fecha) = '" + fecha + "' " + "order by s.horainicio");
+
+			System.out.println("Horarios " + fecha + " (" + peliculaSeleccionada + ")");
+
+			while (rs.next()) {
+				LocalTime hora = rs.getTimestamp("horainicio").toLocalDateTime().toLocalTime();
+
+				String sala = rs.getString("nomsala");
+				double precio = rs.getDouble("precio");
+
+				System.out.println(hora + " - " + peliculaSeleccionada + " (" + sala + ") - " + precio + " €");
+			}
+
+			rs.close();
+
+			System.out.println("0. Volver");
+			Inicio.teclado.nextInt();
+			Inicio.teclado.nextLine();
+			mostrarFechas(peliculaSeleccionada);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+}

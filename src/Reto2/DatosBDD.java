@@ -9,7 +9,7 @@ public class DatosBDD {
 		ConnexionBDD db = new ConnexionBDD();
 
 		try {
-			ResultSet rs = db.getResultSet("SELECT * FROM cliente");
+			ResultSet rs = db.getResultSet("select * from cliente");
 
 			while (rs.next()) {
 				System.out.println("DNI: " + rs.getObject("dni") + ", Nombre: " + rs.getObject("nombre")
