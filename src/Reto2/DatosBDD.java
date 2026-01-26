@@ -5,29 +5,27 @@ import java.sql.SQLException;
 
 public class DatosBDD {
 
-    public static void LeerDatosBDD() {
-        ResultSet rs = ConnexionBDD.getResultSet("SELECT * FROM usuarios");
+	public static void LeerDatosBDD() {
+		ConnexionBDD db = new ConnexionBDD();
 
-        if (rs != null) {
-            try {
-                while (rs.next()) {
-                    System.out.println(
-                        "DNI: " + rs.getObject("dni") +
-                        ", Nombre: " + rs.getObject("nombre") +
-                        ", Apellidos: " + rs.getObject("apellidos") +
-                        ", Grupo: " + rs.getObject("grupo")
-                    );
-                }
+		try {
+			ResultSet rs = db.getResultSet("SELECT * FROM cliente");
 
-                // Cerramos el ResultSet después de usarlo
-                rs.close();
+			while (rs.next()) {
+				System.out.println("DNI: " + rs.getObject("dni") + ", Nombre: " + rs.getObject("nombre")
+						+ ", Apellidos: " + rs.getObject("apellidos") + ", Email: " + rs.getObject("email")
+						+ ", Contraseña" + rs.getObject("contraseña"));
+			}
 
-                // Cerramos la conexión y statement
-                ConnexionBDD.cerrarConexion();
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		db.cerrarConexion();
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	}
+
+	public static void main(String[] args) {
+		LeerDatosBDD();
+	}
 }
