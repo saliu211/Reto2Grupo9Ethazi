@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 
 public class Bienvenida {
 
@@ -33,7 +34,7 @@ public class Bienvenida {
 	public static void elegirPelicula() {
 		ConnexionBDD db = new ConnexionBDD();
 		try {
-			System.out.println("Qué pelicula desea ver? ");
+			System.out.println("Qué pelicula desea ver? Introduce el nombre de esta: ");
 			String peliculaSeleccionada = Inicio.teclado.nextLine();
 
 			ResultSet existe = db.getResultSet("select * from pelicula where titulo = '" + peliculaSeleccionada + "'");
@@ -74,13 +75,22 @@ public class Bienvenida {
 			}
 
 			rsFechas.close();
-
-			System.out.println("Seleccione una fecha (0 para volver atras): ");
-			int opcion = Inicio.teclado.nextInt();
-			Inicio.teclado.nextLine();
-
+			
+			int opcion = -1;
+			try {
+				System.out.println("Introduce el numero de la sesion. (0 para volver atras): ");
+				opcion = Inicio.teclado.nextInt();
+				Inicio.teclado.nextLine();
+			} catch (InputMismatchException e) {
+				System.out.println("Introduce un numero, no un carácter.");
+				Inicio.teclado.nextLine();
+				mostrarFechas(peliculaSeleccionada);
+			}
 			if (opcion == 0) {
-				elegirPelicula();
+				leerPeliculas();
+			}else if (opcion < 0 || opcion > fechas.size()) {
+				System.out.println("No hay ninguna sesion con este numero de sesion. ");
+				mostrarFechas(peliculaSeleccionada);
 			} else {
 				mostrarHorarios(peliculaSeleccionada, fechas.get(opcion - 1));
 			}
@@ -96,7 +106,7 @@ public class Bienvenida {
 		try {
 			ResultSet rs = db.getResultSet(
 
-					"select s.horainicio, sa.nomsala, s.precio " + "from sesion s "
+					"select numsesion, s.horainicio, sa.nomsala, s.precio " + "from sesion s "
 							+ "join pelicula p on s.numpelicula = p.numpelicula "
 							+ "join sala sa on s.numsala = sa.numsala " + "where p.titulo = '" + peliculaSeleccionada
 							+ "' " + "and date(s.fecha) = '" + fecha + "' " + "order by s.horainicio");
@@ -105,16 +115,15 @@ public class Bienvenida {
 
 			while (rs.next()) {
 				LocalTime hora = rs.getTimestamp("horainicio").toLocalDateTime().toLocalTime();
-
 				String sala = rs.getString("nomsala");
 				double precio = rs.getDouble("precio");
 
-				System.out.println(hora + " - " + peliculaSeleccionada + " (" + sala + ") - " + precio + " €");
+				System.out.println(rs.getObject("numsesion") + " - " + hora + " - " + peliculaSeleccionada + " (" + sala
+						+ ") - " + precio + " €");
 			}
 
 			rs.close();
-
-			System.out.println("0. Volver");
+			System.out.println("Seleccione la sesion deseada. (0 para volver atras):");
 			Inicio.teclado.nextInt();
 			Inicio.teclado.nextLine();
 			mostrarFechas(peliculaSeleccionada);
