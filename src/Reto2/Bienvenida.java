@@ -75,7 +75,7 @@ public class Bienvenida {
 			}
 
 			rsFechas.close();
-			
+
 			int opcion = -1;
 			try {
 				System.out.println("Introduce el numero de la sesion. (0 para volver atras): ");
@@ -88,7 +88,7 @@ public class Bienvenida {
 			}
 			if (opcion == 0) {
 				leerPeliculas();
-			}else if (opcion < 0 || opcion > fechas.size()) {
+			} else if (opcion < 0 || opcion > fechas.size()) {
 				System.out.println("No hay ninguna sesion con este numero de sesion. ");
 				mostrarFechas(peliculaSeleccionada);
 			} else {
@@ -123,14 +123,27 @@ public class Bienvenida {
 			}
 
 			rs.close();
+			
 			System.out.println("Seleccione la sesion deseada. (0 para volver atras):");
-			Inicio.teclado.nextInt();
-			Inicio.teclado.nextLine();
-			mostrarFechas(peliculaSeleccionada);
-
+			int sesionDeseada = Inicio.teclado.nextInt();
+			ResultSet sesionExiste = db.getResultSet("SELECT s.* FROM sesion s "
+					+ "INNER JOIN pelicula p ON s.numpelicula = p.numpelicula " + "WHERE s.numsesion = '"
+					+ sesionDeseada + "' AND p.titulo = '" + peliculaSeleccionada + "'");
+			if (sesionExiste.next()) {
+				resumenSeleccion();
+			} else {
+				System.out.println("No existe ninguna sesion asociada a esa pelicula.");
+				mostrarHorarios(peliculaSeleccionada, fecha);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void resumenSeleccion() {
+		ConnexionBDD db = new ConnexionBDD();
+		System.out.println("ds");
+
 	}
 
 }
