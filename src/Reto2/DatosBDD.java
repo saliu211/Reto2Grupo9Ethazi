@@ -5,19 +5,20 @@ import java.sql.SQLException;
 
 public class DatosBDD {
 
+
 	public static void LeerDatosBDD() {
 		ConnexionBDD db = new ConnexionBDD();
 
 		try {
-			ResultSet rs = db.getResultSet("select * from cliente");
+			ConnexionBDD.rs = db.getResultSet("select * from cliente");
 
-			while (rs.next()) {
-				System.out.println("DNI: " + rs.getObject("dni") + ", Nombre: " + rs.getObject("nombre")
-						+ ", Apellidos: " + rs.getObject("apellidos") + ", Email: " + rs.getObject("email")
-						+ ", Contraseña" + rs.getObject("contraseña"));
+			while (ConnexionBDD.rs.next()) {
+				System.out.println("DNI: " + ConnexionBDD.rs.getObject("dni") + ", Nombre: " + ConnexionBDD.rs.getObject("nombre")
+						+ ", Apellidos: " + ConnexionBDD.rs.getObject("apellidos") + ", Email: " + ConnexionBDD.rs.getObject("email")
+						+ ", Contraseña" + ConnexionBDD.rs.getObject("contraseña"));
 			}
 
-			rs.close();
+			ConnexionBDD.rs.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

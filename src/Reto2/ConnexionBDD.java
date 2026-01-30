@@ -10,6 +10,7 @@ public class ConnexionBDD {
 
 	private static Connection conexion;
 	private static Statement st;
+	public static ResultSet rs;
 
 	public ConnexionBDD() {
 		try {
