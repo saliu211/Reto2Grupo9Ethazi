@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 
 public class Bienvenida {
+	static ArrayList<Sesion> sesiones = new ArrayList<>();
 
 	public static void main(String[] args) {
 
@@ -62,21 +63,22 @@ public class Bienvenida {
 
 	public static void mostrarFechas(String peliculaSeleccionada) {
 		ConnexionBDD db = new ConnexionBDD();
-		ArrayList<LocalDate> fechas = new ArrayList<>();
 
 		try {
 			ConnexionBDD.rs = db.getResultSet("select distinct date(s.fecha) as fecha " + "from sesion s "
 					+ "join pelicula p on s.numpelicula = p.numpelicula " + "where p.titulo = '" + peliculaSeleccionada
 					+ "'");
 
-			fechas = new ArrayList<>();
 			int i = 1;
 
 			System.out.println("Fechas disponibles para " + peliculaSeleccionada + ":");
 
 			while (ConnexionBDD.rs.next()) {
 				LocalDate fecha = ConnexionBDD.rs.getDate("fecha").toLocalDate();
-				fechas.add(fecha);
+
+				Sesion sesion = new Sesion(fecha);
+				sesiones.add(sesion);
+
 				System.out.println(i + ". " + fecha);
 				i++;
 			}
@@ -94,14 +96,13 @@ public class Bienvenida {
 					if (opcion == 0)
 						leerPeliculas();
 
-					if (opcion < 1 || opcion > fechas.size()) {
+					if (opcion < 1 || opcion > sesiones.size()) {
 
 						System.err.println("No hay ninguna sesion con este numero de sesion. ");
 						mostrarFechas(peliculaSeleccionada);
 					}
-
-					LocalDate fechaSeleccionada = fechas.get(opcion - 1);
-					mostrarHorarios(peliculaSeleccionada, fechaSeleccionada);
+					Sesion sesionSeleccionada = sesiones.get(opcion - 1);
+					mostrarHorarios(peliculaSeleccionada, sesionSeleccionada.getFecha());
 				} catch (InputMismatchException e) {
 					System.err.println("Introduce un numero, no un carácter.");
 					Inicio.teclado.nextLine();
@@ -118,24 +119,29 @@ public class Bienvenida {
 		ConnexionBDD db = new ConnexionBDD();
 
 		try {
-			ConnexionBDD.rs = db.getResultSet(
-
-					"select numsesion, s.horainicio, sa.nomsala, s.precio " + "from sesion s "
-							+ "join pelicula p on s.numpelicula = p.numpelicula "
-							+ "join sala sa on s.numsala = sa.numsala " + "where p.titulo = '" + peliculaSeleccionada
-							+ "' " + "and date(s.fecha) = '" + fecha + "' " + "order by s.horainicio");
+			ConnexionBDD.rs = db
+					.getResultSet("SELECT s.numsesion, s.horainicio, s.horafin, sa.nomsala, s.precio, p.titulo "
+							+ "FROM sesion s " + "JOIN pelicula p ON s.numpelicula = p.numpelicula "
+							+ "JOIN sala sa ON s.numsala = sa.numsala " + "WHERE p.titulo = '" + peliculaSeleccionada
+							+ "' " + "AND DATE(s.fecha) = '" + fecha + "' " + "ORDER BY s.horainicio");
 
 			System.out.println("Horarios " + fecha + " (" + peliculaSeleccionada + ")");
 
 			while (ConnexionBDD.rs.next()) {
-				LocalTime hora = ConnexionBDD.rs.getTimestamp("horainicio").toLocalDateTime().toLocalTime();
+
+				String titulo = ConnexionBDD.rs.getString("titulo");
+				int numSesion = ConnexionBDD.rs.getInt("numsesion");
+				LocalTime horaInicio = ConnexionBDD.rs.getTime("horainicio").toLocalTime();
+				LocalTime horaFin = ConnexionBDD.rs.getTime("horafin").toLocalTime();
 				String sala = ConnexionBDD.rs.getString("nomsala");
 				double precio = ConnexionBDD.rs.getDouble("precio");
 
-				System.out.println(ConnexionBDD.rs.getObject("numsesion") + " - " + hora + " - " + peliculaSeleccionada
-						+ " (" + sala + ") - " + precio + " €");
-			}
+				Sesion sesion = new Sesion(numSesion, 0, 0, horaInicio, horaFin, null, precio);
+				sesiones.add(sesion);
 
+				System.out.println(numSesion + "." + " - " + horaInicio + " - " + horaFin + " - " + titulo + " ("
+						+ ConnexionBDD.rs.getString("nomsala") + ") - " + precio + " €");
+			}
 			ConnexionBDD.rs.close();
 
 			int sesionDeseada = -1;
@@ -160,7 +166,7 @@ public class Bienvenida {
 					Inicio.teclado.nextLine();
 					mostrarHorarios(peliculaSeleccionada, fecha);
 				}
-				resumenSeleccion(peliculaSeleccionada, fecha);
+				resumenSeleccion(peliculaSeleccionada, fecha, null);
 			}
 
 		} catch (SQLException e) {
@@ -169,33 +175,36 @@ public class Bienvenida {
 		}
 	}
 
-	public static void resumenSeleccion(String peliculaSeleccionada, LocalDate fecha) {
-		ConnexionBDD db = new ConnexionBDD();
+	public static void resumenSeleccion(String peliculaSeleccionada, LocalDate fecha, Sesion sesionSeleccionada) {
 		int numEspectadores = -1;
 
-		try {
-			ConnexionBDD.rs = db.getResultSet(
-
-					"select numsesion, s.horainicio, sa.nomsala, s.precio " + "from sesion s "
-							+ "join pelicula p on s.numpelicula = p.numpelicula "
-							+ "join sala sa on s.numsala = sa.numsala " + "where p.titulo = '" + peliculaSeleccionada
-							+ "' " + "and date(s.fecha) = '" + fecha + "' " + "order by s.horainicio");
-
-
-			while (numEspectadores != 0) {
-				try {
+		while (numEspectadores <= 0) {
+			try {
 				System.out.println("Cuantas entradas desea: ");
 				numEspectadores = Inicio.teclado.nextInt();
-				
-				System.out.println();
-				
-				
-			}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+				Inicio.teclado.nextLine();
 
+				if (numEspectadores <= 0) {
+					System.err.println("El numero de entradas debe ser mayor a 0.");
+					resumenSeleccion(peliculaSeleccionada, fecha, sesionSeleccionada);
+				}
+
+			} catch (InputMismatchException e) {
+				System.err.println("Introduce un numero, no un caracter");
+				Inicio.teclado.nextLine();
+				numEspectadores = -1;
+			}
 		}
+		double total = sesionSeleccionada.getPrecio() * numEspectadores;
+
+		System.out.println("Resumen de la seleccion realizada:");
+		System.out.println("Pelicula: " + peliculaSeleccionada);
+		System.out.println("Sesion: " + sesionSeleccionada.getNumSesion());
+		System.out.println(" - " + sesionSeleccionada.getHoraInicio());
+		System.out.println(" - " + sesionSeleccionada.getHoraFin());
+		System.out.println("Espectadores: " + numEspectadores);
+		System.out.println("Precio total: " + total + "€");
+		leerPeliculas();
 
 	}
 }

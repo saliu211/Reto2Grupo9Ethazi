@@ -1,21 +1,28 @@
 package Reto2;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 public class Sesion {
 	  private int numSesion;
 	    private int numSala;
 	    private int numPelicula;
-	    private LocalDateTime fecInicio;
-	    private LocalDateTime fecFinal;
+	    private LocalTime horaInicio;
+	    private LocalTime horaFin;
+	    private LocalDate fecha;
 	    private double precio;
 	   
-	    public Sesion(int numSesion, int numSala, int numPelicula, LocalDateTime fecInicio, LocalDateTime fecFinal, double precio) {
+	    public Sesion(int numSesion, int numSala, int numPelicula, LocalTime horaInicio, LocalTime horaFin, LocalDate fecha, double precio) {
 	        this.numSesion = numSesion;
 	        this.numSala = numSala;
 	        this.numPelicula = numPelicula;
-	        this.fecInicio = fecInicio;
-	        this.fecFinal = fecFinal;
+	        this.horaInicio = horaInicio;
+	        this.horaFin = horaFin;
+	        this.fecha = fecha;
 	        this.precio = precio;
 	    }
+		public Sesion(LocalDate fecha) {
+			this.fecha = fecha;
+		}
 		public int getNumSesion() {
 			return numSesion;
 		}
@@ -33,18 +40,24 @@ public class Sesion {
 		}
 		public void setNumPelicula(int numPelicula) {
 			this.numPelicula = numPelicula;
+		}	
+		public LocalTime getHoraInicio() {
+			return horaInicio;
 		}
-		public LocalDateTime getFecInicio() {
-			return fecInicio;
+		public void setHoraInicio(LocalTime horaInicio) {
+			this.horaInicio = horaInicio;
 		}
-		public void setFecInicio(LocalDateTime fecInicio) {
-			this.fecInicio = fecInicio;
+		public LocalTime getHoraFin() {
+			return horaFin;
 		}
-		public LocalDateTime getFecFinal() {
-			return fecFinal;
+		public void setHoraFin(LocalTime horaFin) {
+			this.horaFin = horaFin;
 		}
-		public void setFecFinal(LocalDateTime fecFinal) {
-			this.fecFinal = fecFinal;
+		public LocalDate getFecha() {
+			return fecha;
+		}
+		public void setFecha(LocalDate fecha) {
+			this.fecha = fecha;
 		}
 		public double getPrecio() {
 			return precio;
@@ -55,6 +68,7 @@ public class Sesion {
 		@Override
 		public String toString() {
 			return "Sesion [numSesion=" + numSesion + ", numSala=" + numSala + ", numPelicula=" + numPelicula
-					+ ", fecInicio=" + fecInicio + ", fecFinal=" + fecFinal + ", precio=" + precio + "]";
+					+ ", horaInicio=" + horaInicio + ", horaFinal=" + horaFin + ", fecha=" + fecha + ", precio="
+					+ precio + "]";
 		}
-}
+}		
