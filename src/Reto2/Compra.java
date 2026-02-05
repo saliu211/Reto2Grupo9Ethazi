@@ -49,4 +49,8 @@ public class Compra {
 		return "Compra [numCompra=" + numCompra + ", dniCliente=" + dniCliente + ", fechaHora=" + fechaHora
 				+ ", precioTotal=" + precioTotal + ", descTotal=" + descTotal + "]";
 	}
+	public void setTituloPelicula(String peliculaSeleccionada) {
+		// TODO Auto-generated method stub
+		
+	}
 }
